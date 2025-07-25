@@ -22,11 +22,9 @@ public class AiModelProperties {
         private String baseUrl;
         private String apiKey;
         private String model;
+        private String modelType;
         private Double temperature = 0.7;
-        private String embeddingModelName;
         private Double embeddingDimensions;
-        
-        // 新增属性，对应LlmModel
         private String modelDescription = ""; // 模型描述
         private String modelTag = "";         // 模型标签(tagA,tagB,tagC)
     }
@@ -36,12 +34,10 @@ public class AiModelProperties {
     {
         private String baseUrl;
         private String model;
+        private String modelType;
         private Double temperature = 0.7;
-        private String embeddingModelName;
         private Double embeddingDimensions;
-        
-        // 新增属性，对应LlmModel
-        private String modelDescription = ""; // 模型描述
-        private String modelTag = "";         // 模型标签(tagA,tagB,tagC)
+        private String modelDescription = "";
+        private String modelTag = "";
     }
 }
