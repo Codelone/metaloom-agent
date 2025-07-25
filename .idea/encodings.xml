@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/metaloom-common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/metaloom-lineage/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/metaloom-metadata/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/metaloom-model/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/metaloom-parent/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/metaloom-prompt/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/metaloom-rag/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/metaloom-tools/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
+  </component>
+</project>
