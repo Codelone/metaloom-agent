@@ -86,6 +86,7 @@
         <module>metaloom-common</module>
         <module>metaloom-parent</module>
         <module>metaloom-ai</module>
+        <module>metaloom-mcp-server</module>
         <!--        <module>metaloom-sql-analyze</module>-->
 <!--        <module>metaloom-sql-coding</module>-->
     </modules>

@@ -28,6 +28,16 @@ spring:
           model: text-embedding-3-large
     ollama:
       base-url: "http://disabled-placeholder:11434"
+    mcp:
+      client:
+        enabled: true
+        # SSE 连接配置（连接到MCP Server）
+        sse:
+          connections:
+            asset: # MCP服务端连接名称
+              sse-endpoint: http://127.0.0.1:10001/sse  # MCP Server端的SSE端点
+
+
 ai:
   openai:
     deepseek-v3:
