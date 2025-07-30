@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.metaloom.common.jdbc.mapper.TMtdMdLineageMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.metaloom.common.jdbc.entity.TMtdMdLineage">
+        <id column="c_lineage_id" property="lineageId" />
+        <result column="c_target_inst_id" property="targetInstId" />
+        <result column="c_target_class_id" property="targetClassId" />
+        <result column="c_target_sys_id" property="targetSysId" />
+        <result column="c_source_inst_id" property="sourceInstId" />
+        <result column="c_source_class_id" property="sourceClassId" />
+        <result column="c_source_sys_id" property="sourceSysId" />
+        <result column="c_start_time" property="startTime" />
+        <result column="c_src_inst_id" property="srcInstId" />
+        <result column="c_src_type" property="srcType" />
+        <result column="c_source_id" property="sourceId" />
+        <result column="c_source_inst_path" property="sourceInstPath" />
+        <result column="c_target_inst_path" property="targetInstPath" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        c_lineage_id, c_target_inst_id, c_target_class_id, c_target_sys_id, c_source_inst_id, 
+        c_source_class_id, c_source_sys_id, c_start_time, c_src_inst_id, c_src_type, c_source_id,
+        c_source_inst_path, c_target_inst_path
+    </sql>
+
+</mapper> 

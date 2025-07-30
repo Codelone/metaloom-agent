@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.metaloom</groupId>
-        <artifactId>metaloom</artifactId>
+        <artifactId>metaloom-common</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>metaloom-tools</artifactId>
+    <artifactId>metaloom-common-utils</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -19,18 +19,16 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.metaloom</groupId>
-            <artifactId>metaloom-common-utils</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.metaloom</groupId>
-            <artifactId>metaloom-common-jdbc</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-mcp-client</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 
