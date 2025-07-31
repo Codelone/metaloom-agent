@@ -1,6 +1,7 @@
 package com.metaloom.mcp;
 
 import com.metaloom.mcp.tools.MetadataTool;
+import com.metaloom.mcp.tools.LineageTool;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;
@@ -17,9 +18,9 @@ public class McpServerApplication {
     }
 
     @Bean
-    public ToolCallbackProvider imageSearchTools(MetadataTool metadataTool) {
+    public ToolCallbackProvider imageSearchTools(MetadataTool metadataTool, LineageTool lineageTool) {
         return MethodToolCallbackProvider.builder()
-                .toolObjects(metadataTool)
+                .toolObjects(metadataTool, lineageTool)
                 .build();
     }
 }

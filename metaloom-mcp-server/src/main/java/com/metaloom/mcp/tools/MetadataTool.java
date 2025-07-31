@@ -27,7 +27,7 @@ public class MetadataTool {
      * 响应体：{"code":"0000","msg":"操作成功","data":{"valueMap":{"源系统状态":"已上线","90天访问次数":"3","近30天访问次数":"0","存储空间":"0.00GB","创建时间":"2025-06-03 17:13:25","表DDL更新时间":"2025-06-03 17:13:25","数据更新方式":"未知","表数据更新时间":"2025-06-03 17:13:25","多法人机构号":"999999998","表OWNER的KP":"p4_255015627289330905","表OWNER的云账号名称":"RAM$dtdep-22-1553494350055:024693_SZCQQFUF","表的最后访问时间":"0","数据库名称":"lab_sharedata_dev","数据库类型":"odps","数据类型":"TABLE","记录数":"152,985条","存储量":"0.00GB","更新频率":"未知"},"valueBusiMap":{},"instMap":{"元数据类型":"Odps表","系统名称":"数据实验室","元数据路径":"/lab_sharedata_dev/ads_tv_fqz_order","元数据中文名":"ads_tv_fqz_order","元数据英文名":"ads_tv_fqz_order"}},"success":true}
      */
 
-    @Tool(description = "查询元数据列表")
+    @Tool(name = "metadataListTool", description = "查询元数据列表")
     public String metadataListTool(@ToolParam(description = "查询元数据关键字") String keyword) {
         String url = "http://10.4.96.232:8002/api/mtd/employ/query/mdInstEs/list";
         Map<String, Object> body = new HashMap<>();
@@ -67,7 +67,7 @@ public class MetadataTool {
         return ret.toJSONString();
     }
 
-    @Tool(description = "查询元数据详情")
+    @Tool(name = "metadataDetailTool", description = "查询元数据详情")
     public String metadataDetailTool(@ToolParam(description = "元数据instId") String instId) {
         String url = "http://10.4.96.232:8002/api/mtd/employ/query/mdInst/queryAttrInfoList";
         Map<String, Object> body = new HashMap<>();

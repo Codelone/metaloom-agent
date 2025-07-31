@@ -26,7 +26,7 @@ import javax.sql.DataSource;
  */
 @Configuration
 @EnableTransactionManagement
-@MapperScan(basePackages = {"com.metaloom.common.jdbc.*"})
+@MapperScan(basePackages = {"com.metaloom.common.jdbc.mapper"})
 public class MybatisPlusConfig {
 
 
@@ -57,9 +57,9 @@ public class MybatisPlusConfig {
         factoryBean.setMapperLocations(resolver.getResources("classpath*:mapper/**/*.xml"));
 
         SqlSessionFactory sqlSessionFactory =  factoryBean.getObject();
-        org.apache.ibatis.session.Configuration configuration1 = sqlSessionFactory.getConfiguration();
-        System.out.println("Loaded Mapper XMLs: ");
-        configuration1.getMappedStatementNames().forEach(System.out::println);
+//        org.apache.ibatis.session.Configuration configuration1 = sqlSessionFactory.getConfiguration();
+//        System.out.println("Loaded Mapper XMLs: ");
+//        configuration1.getMappedStatementNames().forEach(System.out::println);
         return sqlSessionFactory;
     }
     

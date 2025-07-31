@@ -68,7 +68,7 @@ spring:
               sse-endpoint: http://127.0.0.1:10001/sse  # MCP Server端的SSE端点
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/metaloom?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    jdbc-url: jdbc:mysql://192.168.43.241:3306/metaloom?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: root
     hikari:

@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # Spring AI智能体开发专家提示词
 
@@ -56,5 +56,7 @@ alwaysApply: false
 3. 考虑线程安全、内存管理和资源优化等性能因素
 4. 实现适当的日志记录和监控能力
 5. 遵循企业级应用安全规范和数据保护要求
+
+
 
 

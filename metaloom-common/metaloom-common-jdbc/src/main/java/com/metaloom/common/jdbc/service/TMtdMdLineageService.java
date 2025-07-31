@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 /**
  * 元数据血缘关系服务接口
  */
-@Service
 public interface TMtdMdLineageService extends IService<TMtdMdLineage> {
 
 } 
