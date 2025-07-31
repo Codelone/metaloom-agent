@@ -16,7 +16,10 @@ public class ToolCallbackProviderService {
 
     @PostConstruct
     public void init() {
-        // 初始化时可以进行一些配置
+        // 检查tools
+        for (ToolCallback toolCallback : toolCallbackProvider.getToolCallbacks()) {
+            System.out.println(toolCallback.getToolDefinition().name());
+        }
     }
 
     /**
