@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import com.metaloom.common.http.HttpClientUtils;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONArray;
@@ -14,6 +16,9 @@ import com.alibaba.fastjson2.JSONArray;
 
 @Service
 public class MetadataTool {
+
+    // 本地调试模式开关
+    private static final boolean LOCAL_DEBUG_MODE = true;
 
     /**
      * 元数据列表
@@ -29,6 +34,10 @@ public class MetadataTool {
 
     @Tool(name = "metadataListTool", description = "查询元数据列表")
     public String metadataListTool(@ToolParam(description = "查询元数据关键字") String keyword) {
+        if (LOCAL_DEBUG_MODE) {
+            return getMockMetadataList(keyword);
+        }
+        
         String url = "http://10.4.96.232:8002/api/mtd/employ/query/mdInstEs/list";
         Map<String, Object> body = new HashMap<>();
         body.put("pageSize", 10);
@@ -68,24 +77,152 @@ public class MetadataTool {
     }
 
     @Tool(name = "metadataDetailTool", description = "查询元数据详情")
-    public String metadataDetailTool(@ToolParam(description = "元数据instId") String instId) {
-        String url = "http://10.4.96.232:8002/api/mtd/employ/query/mdInst/queryAttrInfoList";
-        Map<String, Object> body = new HashMap<>();
-        body.put("classId", "OdpsTable");
-        body.put("instId", instId);
-        body.put("envCode", "prod");
-        String resp = HttpClientUtils.postJson(url, body);
-        JSONObject json = JSON.parseObject(resp);
-        JSONObject data = json.getJSONObject("data");
-        JSONObject valueMap = data != null ? data.getJSONObject("valueMap") : null;
-        JSONObject instMap = data != null ? data.getJSONObject("instMap") : null;
-        JSONObject ret = new JSONObject();
-        if (valueMap != null) {
-            ret.put("valueMap", valueMap);
+    public List<String> metadataDetailTool(@ToolParam(description = "元数据instId列表") List<String> instIds) {
+        if (LOCAL_DEBUG_MODE) {
+            return getMockMetadataDetails(instIds);
         }
-        if (instMap != null) {
-            ret.put("instMap", instMap);
+        
+        List<String> results = new ArrayList<>();
+        
+        for (String instId : instIds) {
+            String url = "http://10.4.96.232:8002/api/mtd/employ/query/mdInst/queryAttrInfoList";
+            Map<String, Object> body = new HashMap<>();
+            body.put("classId", "OdpsTable");
+            body.put("instId", instId);
+            body.put("envCode", "prod");
+            
+            try {
+                String resp = HttpClientUtils.postJson(url, body);
+                JSONObject json = JSON.parseObject(resp);
+                JSONObject data = json.getJSONObject("data");
+                JSONObject valueMap = data != null ? data.getJSONObject("valueMap") : null;
+                JSONObject instMap = data != null ? data.getJSONObject("instMap") : null;
+                
+                JSONObject ret = new JSONObject();
+                ret.put("instId", instId);
+                if (valueMap != null) {
+                    ret.put("valueMap", valueMap);
+                }
+                if (instMap != null) {
+                    ret.put("instMap", instMap);
+                }
+                results.add(ret.toJSONString());
+            } catch (Exception e) {
+                // 如果单个请求失败，添加错误信息到结果中
+                JSONObject errorResult = new JSONObject();
+                errorResult.put("instId", instId);
+                errorResult.put("error", "查询失败: " + e.getMessage());
+                results.add(errorResult.toJSONString());
+            }
         }
-        return ret.toJSONString();
+        
+        return results;
+    }
+
+    /**
+     * 获取模拟的元数据列表数据
+     */
+    private String getMockMetadataList(String keyword) {
+        System.out.println("【本地调试模式】查询关键字: " + keyword);
+        
+        JSONArray mockData = new JSONArray();
+        
+        // 根据关键字返回不同的模拟数据
+        if (keyword != null && keyword.toLowerCase().contains("ads_tv")) {
+            // ads_tv相关的模拟数据
+            mockData.add(createMockMetadataItem("6a19d1b55c0a1b9572a567b8faebf8dc_prod", "6a19d1b55c0a1b9572a567b8faebf8dc", 
+                "ads_tv_fqz_order", "ads_tv_fqz_order", "Odps表", "prod", "数据实验室", "lab_sharedata_dev", "152,985"));
+            mockData.add(createMockMetadataItem("c194bffa377fa699f9369ec028466174_prod", "c194bffa377fa699f9369ec028466174", 
+                "ads_tv_company", "对公客户实体表：ADS_TV_COMPANY", "Odps表", "prod", "知识图谱平台", "app_tlkg", "75"));
+            mockData.add(createMockMetadataItem("225974a596a900ca40a9719c8d694530_prod", "225974a596a900ca40a9719c8d694530", 
+                "ads_tv_company_collect", "对公客户实体详情表：ADS_TV_COMPANY_COLLECT", "Odps表", "prod", "知识图谱平台", "app_tlkg", "72"));
+        } else if (keyword != null && keyword.toLowerCase().contains("user")) {
+            // user相关的模拟数据
+            mockData.add(createMockMetadataItem("user_table_001_prod", "user_table_001", 
+                "user_info", "用户信息表", "Odps表", "prod", "用户中心", "user_center", "1,234,567"));
+            mockData.add(createMockMetadataItem("user_table_002_prod", "user_table_002", 
+                "user_profile", "用户档案表", "Odps表", "prod", "用户中心", "user_center", "890,123"));
+        } else if (keyword != null && keyword.toLowerCase().contains("order")) {
+            // order相关的模拟数据
+            mockData.add(createMockMetadataItem("order_table_001_prod", "order_table_001", 
+                "order_main", "订单主表", "Odps表", "prod", "订单系统", "order_system", "5,678,901"));
+            mockData.add(createMockMetadataItem("order_table_002_prod", "order_table_002", 
+                "order_detail", "订单详情表", "Odps表", "prod", "订单系统", "order_system", "12,345,678"));
+        } else {
+            // 默认模拟数据
+            mockData.add(createMockMetadataItem("default_table_001_prod", "default_table_001", 
+                "test_table", "测试表", "Odps表", "prod", "测试系统", "test_schema", "1,000"));
+        }
+        
+        JSONObject result = new JSONObject();
+        result.put("total", mockData.size());
+        result.put("list", mockData);
+        
+        System.out.println("【本地调试模式】返回模拟数据: " + result.toJSONString());
+        return result.toJSONString();
+    }
+
+    /**
+     * 创建模拟的元数据项
+     */
+    private JSONObject createMockMetadataItem(String id, String instId, String instCode, String instName, 
+                                            String className, String envCode, String sysName, String schema, String count) {
+        JSONObject item = new JSONObject();
+        item.put("id", id);
+        item.put("instId", instId);
+        item.put("instName", instName);
+        item.put("className", className);
+        item.put("envCode", envCode);
+        item.put("sysName", sysName);
+        item.put("schema", schema);
+        item.put("count", count);
+        return item;
+    }
+
+    /**
+     * 获取模拟的元数据详情数据
+     */
+    private List<String> getMockMetadataDetails(List<String> instIds) {
+        System.out.println("【本地调试模式】查询instIds: " + instIds);
+        
+        List<String> results = new ArrayList<>();
+        
+        for (String instId : instIds) {
+            JSONObject mockDetail = new JSONObject();
+            mockDetail.put("instId", instId);
+            
+            // 创建模拟的valueMap
+            JSONObject valueMap = new JSONObject();
+            valueMap.put("源系统状态", "已上线");
+            valueMap.put("90天访问次数", "15");
+            valueMap.put("近30天访问次数", "3");
+            valueMap.put("存储空间", "2.5GB");
+            valueMap.put("创建时间", "2024-01-15 10:30:00");
+            valueMap.put("表DDL更新时间", "2024-12-01 14:20:00");
+            valueMap.put("数据更新方式", "增量更新");
+            valueMap.put("表数据更新时间", "2024-12-15 08:00:00");
+            valueMap.put("数据库名称", "prod_database");
+            valueMap.put("数据库类型", "odps");
+            valueMap.put("数据类型", "TABLE");
+            valueMap.put("记录数", "1,234,567条");
+            valueMap.put("存储量", "2.5GB");
+            valueMap.put("更新频率", "每日");
+            
+            // 创建模拟的instMap
+            JSONObject instMap = new JSONObject();
+            instMap.put("元数据类型", "Odps表");
+            instMap.put("系统名称", "模拟系统");
+            instMap.put("元数据路径", "/prod_database/" + instId);
+            instMap.put("元数据中文名", "模拟表_" + instId);
+            instMap.put("元数据英文名", instId);
+            
+            mockDetail.put("valueMap", valueMap);
+            mockDetail.put("instMap", instMap);
+            
+            results.add(mockDetail.toJSONString());
+        }
+        
+        System.out.println("【本地调试模式】返回模拟详情数据: " + results);
+        return results;
     }
 }

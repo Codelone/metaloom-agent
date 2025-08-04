@@ -25,7 +25,13 @@ ai:
   ollama:
     deepseek:
       base-url: http://localhost:11434
-      model: deepseek-r1:14B
+      model: deepseek-r1:1.5B
+      temperature: 0.7
+      modelDescription: "DeepSeek-R1是一个专注于推理的大语言模型，在数学和逻辑推理方面表现优异"
+      modelTag: "推理,数学,逻辑,编程"
+    qwen:
+      base-url: http://localhost:11434
+      model: qwen3:1.7B
       temperature: 0.7
       modelDescription: "DeepSeek-R1是一个专注于推理的大语言模型，在数学和逻辑推理方面表现优异"
       modelTag: "推理,数学,逻辑,编程"
