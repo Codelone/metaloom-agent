@@ -48,16 +48,16 @@ public class AiChatClientAutoConfiguration
                     .openAiApi(api)
                     .defaultOptions(options)
                     .build();
-            
+
             log.info("创建OpenAI ChatClient: {}, 配置Advisors链", name);
             map.put(name, ChatClient.builder(model)
                     .defaultAdvisors(
                             // Advisor执行顺序说明（按getOrder()值，越小越优先）：
                             // 1. 日志记录 - 最高优先级，记录完整的请求和响应
-                            new SimpleLoggerAdvisor(),
+                            new SimpleLoggerAdvisor()
                             
                             // 2. 聊天记忆 - 在处理请求前添加历史对话上下文
-                            MessageChatMemoryAdvisor.builder(chatMemory).build()
+//                            MessageChatMemoryAdvisor.builder(chatMemory).build()
                             
                             // 📋 可选的高级Advisors（按需启用）：
                             
@@ -102,10 +102,10 @@ public class AiChatClientAutoConfiguration
                     .defaultAdvisors(
                             // Advisor执行顺序说明（按getOrder()值，越小越优先）：
                             // 1. 日志记录 - 最高优先级，记录完整的请求和响应
-                            new SimpleLoggerAdvisor(),
+                            new SimpleLoggerAdvisor()
                             
                             // 2. 聊天记忆 - 在处理请求前添加历史对话上下文
-                            MessageChatMemoryAdvisor.builder(chatMemory).build()
+//                            MessageChatMemoryAdvisor.builder(chatMemory).build()
                             
                             // 📋 可选的高级Advisors（同OpenAI配置）：
                             // 3-6. 其他Advisors配置与OpenAI相同，按需启用
