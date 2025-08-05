@@ -60,7 +60,7 @@ public class DataAnalysisOrchestrator {
         result.setSteps(new ArrayList<>());
         
         // 获取LLM客户端
-        ChatClient llm = chatClientFactory.getClient("openai", "deepseek-v3");
+        ChatClient llm = chatClientFactory.getClient("ollama", "qwen");
         
         // 构建初始提示词
         String systemPrompt = buildSystemPrompt();
@@ -121,8 +121,9 @@ public class DataAnalysisOrchestrator {
             你是一个数据分析智能体协调器。你的任务是分析用户查询，并决定调用哪个专家智能体来获取信息。
             
             可用的专家智能体：
-            1. 血缘分析智能体 (lineage_agent) - 用于查询数据血缘关系、数据流向、依赖关系等
-            2. 元数据查询智能体 (metadata_agent) - 用于查询表结构、字段信息、数据字典等元数据信息
+            1. 血缘分析智能体 (lineage_agent) - 用于查询数据血缘关系、数据流向、依赖关系等，该agent的查询和结果仅包含元数据的instId。
+            2. 元数据查询智能体 (metadata_agent) - 用于查询表结构、字段信息、数据字典等元数据信息，该agent要传入元数据的关键字用于搜索。
+            
             
             响应格式要求：
             请严格按照以下JSON格式响应，你可以选择以下三种行动类型之一：
@@ -166,11 +167,16 @@ public class DataAnalysisOrchestrator {
             }
             
             决策规则：
+            - 首次迭代先调用metadata_agent。
             - 如果查询涉及数据流向、血缘关系、依赖关系，调用lineage_agent
             - 如果查询涉及表结构、字段信息、数据字典，调用metadata_agent
             - 如果查询同时涉及多个方面，可以使用parallel_tasks并行调用多个智能体
             - 如果已经有足够信息可以回答用户问题，使用final_answer
-            - 如果无法确定，优先调用metadata_agent获取基础信息
+            - 需要优先调用metadata_agent获取基础信息，从中获取instId才能查询血缘信息。。
+            - lineage_agent的输入必须使用metadata_agent结果中的instId
+            - lineage_agent结果返回的instId之间的血缘关系必须使用metadata_agent获取详细的元数据信息。
+            所有输出只能来自于获取的内容，禁止编造。
+            
             """;
     }
 
@@ -380,7 +386,7 @@ public class DataAnalysisOrchestrator {
         String metadataResult = metadataFuture.get();
         
         // 使用LLM整合结果
-        ChatClient llm = chatClientFactory.getClient("openai", "deepseek-v3");
+        ChatClient llm = chatClientFactory.getClient("ollama", "qwen");
         String integratedResult = integrateResults(llm, userQuery, lineageResult, metadataResult);
         
         result.setFinalAnswer(integratedResult);
@@ -403,6 +409,7 @@ public class DataAnalysisOrchestrator {
             元数据查询结果：%s
             
             请整合这些信息，给出完整、准确的答案。
+            所有输出只能来自于获取的内容，禁止编造。
             """, originalQuery, lineageResult, metadataResult);
         
         Prompt promptObj = new Prompt(prompt);

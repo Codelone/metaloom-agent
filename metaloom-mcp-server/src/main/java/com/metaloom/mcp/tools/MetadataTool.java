@@ -130,28 +130,72 @@ public class MetadataTool {
         // 根据关键字返回不同的模拟数据
         if (keyword != null && keyword.toLowerCase().contains("ads_tv")) {
             // ads_tv相关的模拟数据
-            mockData.add(createMockMetadataItem("6a19d1b55c0a1b9572a567b8faebf8dc_prod", "6a19d1b55c0a1b9572a567b8faebf8dc", 
+            mockData.add(createMockMetadataItem("T001_prod", "T001", 
                 "ads_tv_fqz_order", "ads_tv_fqz_order", "Odps表", "prod", "数据实验室", "lab_sharedata_dev", "152,985"));
-            mockData.add(createMockMetadataItem("c194bffa377fa699f9369ec028466174_prod", "c194bffa377fa699f9369ec028466174", 
+            mockData.add(createMockMetadataItem("T002_prod", "T002", 
                 "ads_tv_company", "对公客户实体表：ADS_TV_COMPANY", "Odps表", "prod", "知识图谱平台", "app_tlkg", "75"));
-            mockData.add(createMockMetadataItem("225974a596a900ca40a9719c8d694530_prod", "225974a596a900ca40a9719c8d694530", 
+            mockData.add(createMockMetadataItem("T003_prod", "T003", 
                 "ads_tv_company_collect", "对公客户实体详情表：ADS_TV_COMPANY_COLLECT", "Odps表", "prod", "知识图谱平台", "app_tlkg", "72"));
         } else if (keyword != null && keyword.toLowerCase().contains("user")) {
             // user相关的模拟数据
-            mockData.add(createMockMetadataItem("user_table_001_prod", "user_table_001", 
+            mockData.add(createMockMetadataItem("T004_prod", "T004", 
                 "user_info", "用户信息表", "Odps表", "prod", "用户中心", "user_center", "1,234,567"));
-            mockData.add(createMockMetadataItem("user_table_002_prod", "user_table_002", 
+            mockData.add(createMockMetadataItem("T005_prod", "T005", 
                 "user_profile", "用户档案表", "Odps表", "prod", "用户中心", "user_center", "890,123"));
         } else if (keyword != null && keyword.toLowerCase().contains("order")) {
             // order相关的模拟数据
-            mockData.add(createMockMetadataItem("order_table_001_prod", "order_table_001", 
+            mockData.add(createMockMetadataItem("T006_prod", "T006", 
                 "order_main", "订单主表", "Odps表", "prod", "订单系统", "order_system", "5,678,901"));
-            mockData.add(createMockMetadataItem("order_table_002_prod", "order_table_002", 
+            mockData.add(createMockMetadataItem("T007_prod", "T007", 
                 "order_detail", "订单详情表", "Odps表", "prod", "订单系统", "order_system", "12,345,678"));
+        } else if (keyword != null && keyword.toLowerCase().contains("t001") || keyword.toLowerCase().contains("t002") || keyword.toLowerCase().contains("t003")) {
+            // T001-T003相关的模拟数据
+            mockData.add(createMockMetadataItem("T001_prod", "T001", 
+                "ads_tv_fqz_order", "ads_tv_fqz_order", "Odps表", "prod", "数据实验室", "lab_sharedata_dev", "152,985"));
+            mockData.add(createMockMetadataItem("T002_prod", "T002", 
+                "ads_tv_company", "对公客户实体表：ADS_TV_COMPANY", "Odps表", "prod", "知识图谱平台", "app_tlkg", "75"));
+            mockData.add(createMockMetadataItem("T003_prod", "T003", 
+                "ads_tv_company_collect", "对公客户实体详情表：ADS_TV_COMPANY_COLLECT", "Odps表", "prod", "知识图谱平台", "app_tlkg", "72"));
+        } else if (keyword != null && keyword.toLowerCase().contains("t004") || keyword.toLowerCase().contains("t005") || keyword.toLowerCase().contains("t006")) {
+            // T004-T006相关的模拟数据
+            mockData.add(createMockMetadataItem("T004_prod", "T004", 
+                "user_info", "用户信息表", "Odps表", "prod", "用户中心", "user_center", "1,234,567"));
+            mockData.add(createMockMetadataItem("T005_prod", "T005", 
+                "user_profile", "用户档案表", "Odps表", "prod", "用户中心", "user_center", "890,123"));
+            mockData.add(createMockMetadataItem("T006_prod", "T006", 
+                "order_main", "订单主表", "Odps表", "prod", "订单系统", "order_system", "5,678,901"));
+        } else if (keyword != null && keyword.toLowerCase().contains("t007") || keyword.toLowerCase().contains("t008") || keyword.toLowerCase().contains("t009") || keyword.toLowerCase().contains("t010")) {
+            // T007-T010相关的模拟数据
+            mockData.add(createMockMetadataItem("T007_prod", "T007", 
+                "order_detail", "订单详情表", "Odps表", "prod", "订单系统", "order_system", "12,345,678"));
+            mockData.add(createMockMetadataItem("T008_prod", "T008", 
+                "product_info", "产品信息表", "Odps表", "prod", "产品系统", "product_system", "45,678"));
+            mockData.add(createMockMetadataItem("T009_prod", "T009", 
+                "sales_summary", "销售汇总视图", "Odps视图", "prod", "销售系统", "sales_system", "89,012"));
+            mockData.add(createMockMetadataItem("T010_prod", "T010", 
+                "customer_analysis", "客户分析表", "Odps表", "prod", "分析系统", "analysis_system", "234,567"));
         } else {
-            // 默认模拟数据
-            mockData.add(createMockMetadataItem("default_table_001_prod", "default_table_001", 
-                "test_table", "测试表", "Odps表", "prod", "测试系统", "test_schema", "1,000"));
+            // 默认模拟数据 - 返回所有可用的表
+            mockData.add(createMockMetadataItem("T001_prod", "T001", 
+                "ads_tv_fqz_order", "ads_tv_fqz_order", "Odps表", "prod", "数据实验室", "lab_sharedata_dev", "152,985"));
+            mockData.add(createMockMetadataItem("T002_prod", "T002", 
+                "ads_tv_company", "对公客户实体表：ADS_TV_COMPANY", "Odps表", "prod", "知识图谱平台", "app_tlkg", "75"));
+            mockData.add(createMockMetadataItem("T003_prod", "T003", 
+                "ads_tv_company_collect", "对公客户实体详情表：ADS_TV_COMPANY_COLLECT", "Odps表", "prod", "知识图谱平台", "app_tlkg", "72"));
+            mockData.add(createMockMetadataItem("T004_prod", "T004", 
+                "user_info", "用户信息表", "Odps表", "prod", "用户中心", "user_center", "1,234,567"));
+            mockData.add(createMockMetadataItem("T005_prod", "T005", 
+                "user_profile", "用户档案表", "Odps表", "prod", "用户中心", "user_center", "890,123"));
+            mockData.add(createMockMetadataItem("T006_prod", "T006", 
+                "order_main", "订单主表", "Odps表", "prod", "订单系统", "order_system", "5,678,901"));
+            mockData.add(createMockMetadataItem("T007_prod", "T007", 
+                "order_detail", "订单详情表", "Odps表", "prod", "订单系统", "order_system", "12,345,678"));
+            mockData.add(createMockMetadataItem("T008_prod", "T008", 
+                "product_info", "产品信息表", "Odps表", "prod", "产品系统", "product_system", "45,678"));
+            mockData.add(createMockMetadataItem("T009_prod", "T009", 
+                "sales_summary", "销售汇总视图", "Odps视图", "prod", "销售系统", "sales_system", "89,012"));
+            mockData.add(createMockMetadataItem("T010_prod", "T010", 
+                "customer_analysis", "客户分析表", "Odps表", "prod", "分析系统", "analysis_system", "234,567"));
         }
         
         JSONObject result = new JSONObject();

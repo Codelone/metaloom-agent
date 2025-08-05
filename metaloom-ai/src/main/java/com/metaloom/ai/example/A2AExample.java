@@ -12,12 +12,12 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class A2AExample implements CommandLineRunner {
+public class A2AExample {//implements CommandLineRunner {
 
     @Autowired
     private DataAnalysisOrchestrator orchestrator;
 
-    @Override
+    //@Override
     public void run(String... args) throws Exception {
         log.info("=== A2A智能体系统示例 ===");
         
