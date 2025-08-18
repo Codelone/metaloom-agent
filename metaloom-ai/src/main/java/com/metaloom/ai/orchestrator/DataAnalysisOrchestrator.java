@@ -17,6 +17,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -43,6 +44,9 @@ public class DataAnalysisOrchestrator {
     @Autowired
     private MetadataAgent metadataAgent;
 
+    @Value("${ai.active}")
+    private String modelName;
+
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
 
     /**
@@ -60,12 +64,12 @@ public class DataAnalysisOrchestrator {
         result.setSteps(new ArrayList<>());
         
         // 获取LLM客户端
-        ChatClient llm = chatClientFactory.getClient("ollama", "qwen");
+        ChatClient llm = chatClientFactory.getClient("openai", modelName);
         
         // 构建初始提示词
         String systemPrompt = buildSystemPrompt();
         String currentQuery = userQuery;
-        int maxIterations = 5; // 最大迭代次数
+        int maxIterations = 10; // 最大迭代次数
         int iteration = 0;
         
         while (iteration < maxIterations) {
@@ -118,63 +122,51 @@ public class DataAnalysisOrchestrator {
      */
     private String buildSystemPrompt() {
         return """
-            你是一个数据分析智能体协调器。你的任务是分析用户查询，并决定调用哪个专家智能体来获取信息。
+            你是一个数据分析智能体协调器。你的任务是分析用户查询，根据之前多轮的行动仔细思考并决定调用哪个专家智能体来获取信息。
             
             可用的专家智能体：
-            1. 血缘分析智能体 (lineage_agent) - 用于查询数据血缘关系、数据流向、依赖关系等，该agent的查询和结果仅包含元数据的instId。
-            2. 元数据查询智能体 (metadata_agent) - 用于查询表结构、字段信息、数据字典等元数据信息，该agent要传入元数据的关键字用于搜索。
+            1. 血缘分析智能体 (lineage_agent) 
+             - 用于查询数据血缘关系、数据流向、依赖关系等。
+             - 仅能使用instId查询。
+             - 返回结果也仅包含元数据的instId之间的血缘关系。
+             - 例如：查询instId为xxx的上游血缘关系，查询深度为2层。
+            2. 元数据查询智能体 (metadata_agent) 
+             - 用于查询表结构、字段信息、数据字典等元数据信息。
+             - 如果有元数据的instId则使用instId查询
+                - 例如 查询instId为001、002的元数据信息
+             - 没有instId则传入元数据的表名以及字段名用于模糊搜索，
+                - 例如 查询表名为xxx的元数据信息、查询表名为xx的字段信息、查询表名为xx的xx字段的元数据信息
+             
             
             
             响应格式要求：
-            请严格按照以下JSON格式响应，你可以选择以下三种行动类型之一：
+            请严格按照以下JSON格式响应，你可以选择以下两种行动类型之一：
             
             1. 调用单个智能体：
             {
                 "action_type": "call_agent",
                 "agent_name": "lineage_agent|metadata_agent",
                 "request_body": {
-                    "query": "具体的查询内容"
+                    "query": "具体的查询内容，要求合理准确的描述需要完成的任务"
                 },
                 "reasoning": "解释为什么选择这个行动"
             }
             
-            2. 并行执行多个任务：
-            {
-                "action_type": "parallel_tasks",
-                "reasoning": "解释为什么需要并行执行多个任务",
-                "tasks": [
-                    {
-                        "agent_name": "lineage_agent",
-                        "description": "任务描述",
-                        "request_body": {
-                            "query": "具体的查询内容"
-                        }
-                    },
-                    {
-                        "agent_name": "metadata_agent",
-                        "description": "任务描述",
-                        "request_body": {
-                            "query": "具体的查询内容"
-                        }
-                    }
-                ]
-            }
-            
-            3. 给出最终答案：
+            2. 给出最终答案：
             {
                 "action_type": "final_answer",
-                "reasoning": "解释为什么已经可以给出最终答案"
+                "result": "要求汇总前n次迭代的结果，整合成用户可读的方式回答originalQuery问题"
             }
             
             决策规则：
-            - 首次迭代先调用metadata_agent。
+            - 首次迭代先调用metadata_agent以获取详细信息和元数据的instId。
             - 如果查询涉及数据流向、血缘关系、依赖关系，调用lineage_agent
-            - 如果查询涉及表结构、字段信息、数据字典，调用metadata_agent
-            - 如果查询同时涉及多个方面，可以使用parallel_tasks并行调用多个智能体
+            - 如果查询涉及表结构、字段信息、数据字典，表或字段详情信息调用metadata_agent
             - 如果已经有足够信息可以回答用户问题，使用final_answer
-            - 需要优先调用metadata_agent获取基础信息，从中获取instId才能查询血缘信息。。
-            - lineage_agent的输入必须使用metadata_agent结果中的instId
+            - 如需查询血缘信息，必须先调用metadata_agent从中获取instId才能查询血缘信息。
+            - 使用lineage_agent必须使用instId进行查询
             - lineage_agent结果返回的instId之间的血缘关系必须使用metadata_agent获取详细的元数据信息。
+            - 最终答案不要给用户输出instId，要输出可读的元数据信息，血缘最好以树形结构输出
             所有输出只能来自于获取的内容，禁止编造。
             
             """;
@@ -218,13 +210,13 @@ public class DataAnalysisOrchestrator {
         try {
             // 处理最终答案
             if (action.getType() == ActionType.FINAL_ANSWER) {
-                return action.getReasoning();
+                return action.getResult();
             }
             
-            // 处理并行任务
-            if (action.getType() == ActionType.PARALLEL_TASKS && action.hasParallelTasks()) {
-                return executeParallelTasks(action);
-            }
+//            // 处理并行任务
+//            if (action.getType() == ActionType.PARALLEL_TASKS && action.hasParallelTasks()) {
+//                return executeParallelTasks(action);
+//            }
             
             // 处理单个智能体调用
             switch (action.getAgentName()) {
@@ -386,7 +378,7 @@ public class DataAnalysisOrchestrator {
         String metadataResult = metadataFuture.get();
         
         // 使用LLM整合结果
-        ChatClient llm = chatClientFactory.getClient("ollama", "qwen");
+        ChatClient llm = chatClientFactory.getClient("openai", "qwen2");
         String integratedResult = integrateResults(llm, userQuery, lineageResult, metadataResult);
         
         result.setFinalAnswer(integratedResult);

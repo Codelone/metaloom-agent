@@ -27,9 +27,5 @@ public class MetadataResponse {
      * 查询结果文本
      */
     private String result;
-    
-    /**
-     * 关键词
-     */
-    private String keyword;
+
 } 

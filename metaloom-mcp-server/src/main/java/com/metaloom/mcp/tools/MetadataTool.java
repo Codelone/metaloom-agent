@@ -1,8 +1,12 @@
 package com.metaloom.mcp.tools;
 
 
+import com.metaloom.common.jdbc.entity.TMtdMdInst;
+import com.metaloom.common.jdbc.service.TMtdMdlInstService;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.metaloom.common.http.HttpClientUtils;
 import java.util.HashMap;
@@ -18,7 +22,16 @@ import com.alibaba.fastjson2.JSONArray;
 public class MetadataTool {
 
     // 本地调试模式开关
-    private static final boolean LOCAL_DEBUG_MODE = true;
+    private static final boolean LOCAL_DEBUG_MODE = false;
+
+    @Value("${metadata.token}")
+    private String token;
+
+    @Autowired(required = false)
+    private TMtdMdlInstService tMtdMdlInstService;
+
+
+    private Map<String, String> headers = new HashMap<>();
 
     /**
      * 元数据列表
@@ -45,13 +58,14 @@ public class MetadataTool {
         body.put("orderName", "");
         body.put("orderValue", "");
         body.put("envCode", "prod");
-        body.put("flag", "false");
-        body.put("instName", keyword);
-        body.put("instCode", "");
+        body.put("flag", "true");
+        body.put("instName", "");
+        body.put("instCode", keyword);
         body.put("sysId", "");
         body.put("schemaCode", "");
-        body.put("classId", "");
-        String resp = HttpClientUtils.postJson(url, body);
+        body.put("classId", "OdpsTable");
+        headers.put("Token", token);
+        String resp = HttpClientUtils.postJson(url, body, headers);
         JSONObject json = JSON.parseObject(resp);
         JSONArray data = json.getJSONArray("data");
         JSONArray result = new JSONArray();
@@ -59,20 +73,21 @@ public class MetadataTool {
             for (int i = 0; i < data.size(); i++) {
                 JSONObject item = data.getJSONObject(i);
                 JSONObject obj = new JSONObject();
-                obj.put("id", item.getString("id"));
-                obj.put("instId", item.getString("instId"));
-                obj.put("instName", item.getString("instName"));
-                obj.put("className", item.getString("className"));
-                obj.put("envCode", item.getString("envCode"));
-                obj.put("sysName", item.getString("sysName"));
-                obj.put("schema", item.getString("schema"));
-                obj.put("count", item.getString("count"));
+                obj.put("元数据instId", item.getString("instId"));
+                obj.put("元数据名称", item.getString("instName"));
+                obj.put("元数据英文名", item.getString("instCode").replaceAll("<em>","").replaceAll("</em>",""));
+//                obj.put("元数据类型", item.getString("className"));
+//                obj.put("envCode", item.getString("envCode"));
+                obj.put("系统名称", item.getString("sysName"));
+                obj.put("元数据库名", item.getString("schema"));
+//                obj.put("下级字段数量", item.getString("count"));
                 result.add(obj);
             }
         }
         JSONObject ret = new JSONObject();
-        ret.put("total", json.getIntValue("total"));
+//        ret.put("total", json.getIntValue("total"));
         ret.put("list", result);
+        System.out.println(ret.toJSONString());
         return ret.toJSONString();
     }
 
@@ -92,7 +107,8 @@ public class MetadataTool {
             body.put("envCode", "prod");
             
             try {
-                String resp = HttpClientUtils.postJson(url, body);
+                headers.put("Token", token);
+                String resp = HttpClientUtils.postJson(url, body, headers);
                 JSONObject json = JSON.parseObject(resp);
                 JSONObject data = json.getJSONObject("data");
                 JSONObject valueMap = data != null ? data.getJSONObject("valueMap") : null;
@@ -101,10 +117,10 @@ public class MetadataTool {
                 JSONObject ret = new JSONObject();
                 ret.put("instId", instId);
                 if (valueMap != null) {
-                    ret.put("valueMap", valueMap);
+                    ret.put("基本信息", valueMap);
                 }
                 if (instMap != null) {
-                    ret.put("instMap", instMap);
+                    ret.put("业务信息", instMap);
                 }
                 results.add(ret.toJSONString());
             } catch (Exception e) {
@@ -115,8 +131,49 @@ public class MetadataTool {
                 results.add(errorResult.toJSONString());
             }
         }
-        
+        System.out.println(results);
         return results;
+    }
+
+
+    // 写一个查询表的下级字段的方法
+    @Tool(name = "queryTableColumnMetadata", description = "查询表级元数据的下级字段信息")
+    public String queryTableColumnMetadata(@ToolParam(description = "元数据ID") String instId) {
+        JSONArray resultArray = new JSONArray();
+        try {
+            // 查询下级字段信息
+            List<TMtdMdInst> downstreamColumns = tMtdMdlInstService.lambdaQuery()
+                    .eq(TMtdMdInst::getCParentId, instId)
+                    .list();
+            // 构建响应
+            for (TMtdMdInst mdInst : downstreamColumns) {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("元数据instId", mdInst.getCInstId());
+                jsonObject.put("元模型类型", mdInst.getCClassId());
+//                 jsonObject.put("上级元数据instId", mdInst.getCParentId());
+                jsonObject.put("元数据英文名称", mdInst.getCInstCode());
+                jsonObject.put("元数据中文名称", mdInst.getCInstName());
+//                 jsonObject.put("元数据ID路径", mdInst.getCInstPath());
+                jsonObject.put("元数据路径", mdInst.getCInstCodePath());
+//                 jsonObject.put("元数据小版本", mdInst.getCVersionNo());
+                jsonObject.put("生效时间", mdInst.getCStartTime());
+                jsonObject.put("系统ID", mdInst.getCSysId());
+//                 jsonObject.put("归属部门", mdInst.getCDeptId());
+//                 jsonObject.put("业务代码最后修改时间", mdInst.getCBusiTime());
+//                 jsonObject.put("是否推荐上架", mdInst.getCRegisterRecommendFlag());
+//                 jsonObject.put("推荐时间", mdInst.getCRecommendTime());
+//                 jsonObject.put("数据来源类型", mdInst.getCSrcType());
+                resultArray.add(jsonObject);
+            }
+
+        } catch (Exception e) {
+            // 如果单个请求失败，添加错误信息到结果中
+            JSONObject errorResult = new JSONObject();
+            errorResult.put("instId", instId);
+            errorResult.put("error", "查询失败: " + e.getMessage());
+            resultArray.add(errorResult.toJSONString());
+        }
+        return resultArray.toJSONString();
     }
 
     /**

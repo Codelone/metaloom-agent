@@ -40,17 +40,18 @@ public class LLMResponseParser {
             
             // 根据action_type确定行动类型
             ActionType type;
+            AgentAction.AgentActionBuilder builder = AgentAction.builder();
+            String result = "";
             if ("final_answer".equals(actionType)) {
                 type = ActionType.FINAL_ANSWER;
+                builder.result(getStringValue(jsonNode, "result"));
             } else if ("parallel_tasks".equals(actionType)) {
                 type = ActionType.PARALLEL_TASKS;
             } else {
                 type = ActionType.CALL_AGENT;
             }
-            
-            AgentAction.AgentActionBuilder builder = AgentAction.builder()
-                .type(type)
-                .reasoning(reasoning);
+
+            builder.type(type).reasoning(reasoning);
             
             // 如果是单个智能体调用
             if (type == ActionType.CALL_AGENT) {

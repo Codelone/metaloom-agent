@@ -35,7 +35,9 @@ public class AgentAction {
      * 推理过程
      */
     private String reasoning;
-    
+
+
+    private String result;
     /**
      * 并行任务列表
      */

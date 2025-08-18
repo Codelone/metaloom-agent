@@ -6,6 +6,7 @@ import com.metaloom.metadata.model.MetadataResponse;
 import com.metaloom.model.llm.ChatClientFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.regex.Matcher;
@@ -23,19 +24,28 @@ public class MetadataAgent {
     @Autowired
     private ToolCallbackProviderService toolCallbackProviderService;
 
+    @Value("${ai.active}")
+    private String modelName;
+
     private static final String SYSTEM_PROMPT = """
             你是一个元数据查询专家，负责帮助用户查询和分析元数据列表和元数据详情。
+            元数据说明：
+            元数据类型分为：OdpsTable-表、OdpsColumn-字段
+            每个元数据都具有唯一标识 instId
             
             你可以使用以下工具:
-            - metadataListTool: 根据关键字搜索匹配的元数据列表
+            - metadataListTool: 根据关键字模糊搜索匹配的元数据列表
             - metadataDetailTool: 根据instId列表查询元数据的详细属性信息
+            - queryTableColumnMetadata: 根据instId查询一张表的下级字段信息
             
             重要提示：
-            1. 根据用户提供的关键字，搜索匹配的元数据列表，然后选取最匹配用户关键字的元数据，将该元数据的详细属性信息返回给用户
-            2. 请根据用户查询内容智能选择合适的工具组合
-            3. 最终以结构化和用户易读的格式展示查询结果
+            1. 用户查询时，若查询不包含instId，需要先使用metadataListTool查询可能的元数据列表，并选取匹配一致的结果作为用户查询的元数据，再使用instId查询具体元数据详细信息。
+            2. 用户查询包含instId，则直接调用metadataDetailTool获取元数据信息。
+            3. 请根据用户查询内容智能选择合适的工具组合完成查询。
+            4. 输出结果除用户要求的以外，需包含中文名、英文名、instId。
+            5. 最终以结构化的格式展示查询结果。
             """;
-
+//               若没有完全一致的元数据，则返回所有可能的结果请用户进一步判断。
     /**
      * 处理元数据查询请求
      *
@@ -43,22 +53,22 @@ public class MetadataAgent {
      * @return 元数据响应
      */
     public MetadataResponse processQuery(MetadataRequest request) {
-        ChatClient chatClient = chatClientFactory.getClient("ollama", "qwen");
+        ChatClient chatClient = chatClientFactory.getClient("openai", modelName);
 
         // 提取请求中的关键字
-        String keyword = extractKeyword(request.getQuery());
-
-        if (keyword == null || keyword.isEmpty()) {
-            return MetadataResponse.builder()
-                    .success(false)
-                    .message("未能识别有效的查询关键字，请提供正确的表名、字段名或相关描述")
-                    .build();
-        }
+//        String keyword = extractKeyword(request.getQuery());
+//
+//        if (keyword == null || keyword.isEmpty()) {
+//            return MetadataResponse.builder()
+//                    .success(false)
+//                    .message("未能识别有效的查询关键字，请提供正确的表名、字段名或相关描述")
+//                    .build();
+//        }
 
         // 添加初始用户查询
         String currentUserMessage = request.getQuery();
 
-        System.out.println("用户消息: " + currentUserMessage);
+        System.out.println("metadata用户消息: " + currentUserMessage);
 
         // 使用Spring AI 1.0的正确语法调用模型
         String response = chatClient.prompt()
@@ -68,14 +78,14 @@ public class MetadataAgent {
                 .call()
                 .content();
 
-        System.out.println("模型响应: " + response);
+        System.out.println("metadata模型响应: " + response);
 
         // 处理并格式化响应
         return MetadataResponse.builder()
                 .success(true)
                 .message("元数据查询成功")
                 .result(response)
-                .keyword(keyword)
+//                .keyword(keyword)
                 .build();
     }
 

@@ -2,6 +2,7 @@ server:
   port: 8080
 
 ai:
+  active: qwen3
   openai:
     deepseek-v3:
       base-url: https://chatapi.littlewheat.com
@@ -21,6 +22,34 @@ ai:
       embeddingDimensions: 1024
       modelDescription: "OpenAI GPT-4o是最新的多模态大语言模型，支持文本、图像和音频处理"
       modelTag: "多模态,文本生成,图像理解,音频处理"
+    qwen3:
+      base-url: http://10.244.51.xx:7762
+      api-key:
+      model: "Qwen-32B"
+      modelType: llm
+      temperature: 0.7
+      embeddingDimensions: 1024
+      modelDescription: "qwen3在数学和逻辑推理方面表现优异"
+      modelTag: "推理,数学,逻辑,编程"
+
+    qwen2:
+      base-url: http://10.244.89.xx:7862
+      api-key:
+      model: "Qwen-14B"
+      modelType: llm
+      temperature: 0.7
+      embeddingDimensions: 1024
+      modelDescription: "qwen3在数学和逻辑推理方面表现优异"
+      modelTag: "推理,数学,逻辑,编程"
+    qwen-vl:
+      base-url: http://10.244.51.xx:8862
+      api-key:
+      model: "Qwen-VL"
+      modelType: llm
+      temperature: 0.7
+      embeddingDimensions: 1024
+      modelDescription: "GLM-4在数学和逻辑推理方面表现优异"
+      modelTag: "推理,数学,逻辑,编程"
 
   ollama:
     deepseek:
@@ -37,6 +66,9 @@ ai:
       modelTag: "推理,数学,逻辑,编程"
 
 spring:
+  http:
+    client:
+      factory: http_components
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
@@ -72,37 +104,23 @@ spring:
             asset: # MCP服务端连接名称
               url: http://127.0.0.1:10001
               sse-endpoint: http://127.0.0.1:10001/sse  # MCP Server端的SSE端点
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    jdbc-url: jdbc:mysql://192.168.43.241:3306/metaloom?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: root
-    hikari:
-      minimum-idle: 5
-      maximum-pool-size: 20
-      auto-commit: true
-      idle-timeout: 30000
-      pool-name: HikariCP
-      max-lifetime: 1800000
-      connection-timeout: 30000
-      connection-test-query: SELECT 1
 
-mybatis-plus:
-  configuration:
-    map-underscore-to-camel-case: true
-    cache-enabled: false
-    call-setters-on-nulls: true
-    jdbc-type-for-null: 'null'
-  global-config:
-    db-config:
-      id-type: auto
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
-  mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.metaloom.common.jdbc
+#mybatis-plus:
+#  configuration:
+#    map-underscore-to-camel-case: true
+#    cache-enabled: false
+#    call-setters-on-nulls: true
+#    jdbc-type-for-null: 'null'
+#  global-config:
+#    db-config:
+#      id-type: auto
+#      logic-delete-field: deleted
+#      logic-delete-value: 1
+#      logic-not-delete-value: 0
+#  mapper-locations: classpath*:mapper/**/*.xml
+#  type-aliases-package: com.metaloom.common.jdbc
 
-# A2A智能体配置
+# A2A智能体配置  暂未使用
 metaloom:
   a2a:
     enabled: true
@@ -128,25 +146,3 @@ metaloom:
       temperature: 0.7
       max-tokens: 2000
       system-prompt: |
-        你是一个数据分析智能体协调器。你的任务是分析用户查询，并决定调用哪个专家智能体来获取信息。
-        
-        可用的专家智能体：
-        1. 血缘分析智能体 (lineage_agent) - 用于查询数据血缘关系、数据流向、依赖关系等
-        2. 元数据查询智能体 (metadata_agent) - 用于查询表结构、字段信息、数据字典等元数据信息
-        
-        响应格式要求：
-        请严格按照以下JSON格式响应：
-        {
-            "action_type": "call_agent|final_answer",
-            "agent_name": "lineage_agent|metadata_agent",
-            "request_body": {
-                "query": "具体的查询内容"
-            },
-            "reasoning": "解释为什么选择这个行动"
-        }
-        
-        决策规则：
-        - 如果查询涉及数据流向、血缘关系、依赖关系，调用lineage_agent
-        - 如果查询涉及表结构、字段信息、数据字典，调用metadata_agent
-        - 如果已经有足够信息可以回答用户问题，使用final_answer
-        - 如果无法确定，优先调用metadata_agent获取基础信息

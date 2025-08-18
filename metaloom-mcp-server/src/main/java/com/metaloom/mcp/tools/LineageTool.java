@@ -3,8 +3,10 @@ package com.metaloom.mcp.tools;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.metaloom.common.jdbc.entity.TMtdMdInst;
 import com.metaloom.common.jdbc.entity.TMtdMdLineage;
 import com.metaloom.common.jdbc.service.TMtdMdLineageService;
+import com.metaloom.common.jdbc.service.TMtdMdlInstService;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +24,7 @@ import java.util.Map;
 public class LineageTool {
 
     // 本地调试模式开关
-    private static final boolean LOCAL_DEBUG_MODE = true;
+    private static final boolean LOCAL_DEBUG_MODE = false;
 
     @Autowired(required = false)
     private TMtdMdLineageService lineageService;
@@ -51,12 +53,12 @@ public class LineageTool {
             JSONArray resultArray = new JSONArray();
             for (TMtdMdLineage lineage : upstreamList) {
                 JSONObject item = new JSONObject();
-                item.put("sourceId", lineage.getSourceInstId());
-                item.put("sourcePath", lineage.getSourceInstPath());
-                item.put("sourceClassId", lineage.getSourceClassId());
-                item.put("sourceSysId", lineage.getSourceSysId());
-                item.put("relationId", lineage.getLineageId());
-                item.put("relationTime", lineage.getStartTime());
+                item.put("元数据instId", lineage.getSourceInstId());
+                item.put("元数据路径", lineage.getSourceInstPath());
+                item.put("元数据类型", lineage.getSourceClassId());
+                item.put("元数据系统名称", lineage.getSourceSysId());
+                item.put("关系id", lineage.getLineageId());
+                item.put("关系创建时间", lineage.getStartTime());
                 resultArray.add(item);
             }
             
@@ -95,12 +97,12 @@ public class LineageTool {
             JSONArray resultArray = new JSONArray();
             for (TMtdMdLineage lineage : downstreamList) {
                 JSONObject item = new JSONObject();
-                item.put("targetId", lineage.getTargetInstId());
-                item.put("targetPath", lineage.getTargetInstPath());
-                item.put("targetClassId", lineage.getTargetClassId());
-                item.put("targetSysId", lineage.getTargetSysId());
-                item.put("relationId", lineage.getLineageId());
-                item.put("relationTime", lineage.getStartTime());
+                item.put("元数据instId", lineage.getTargetInstId());
+                item.put("元数据路径", lineage.getTargetInstPath());
+                item.put("元数据类型", lineage.getTargetClassId());
+                item.put("元数据系统名称", lineage.getTargetSysId());
+                item.put("关系id", lineage.getLineageId());
+                item.put("关系创建时间", lineage.getStartTime());
                 resultArray.add(item);
             }
             
@@ -119,7 +121,7 @@ public class LineageTool {
      * 查询元数据的完整血缘关系图
      * 包含上下游所有关联
      */
-    @Tool(name = "queryFullLineage", description = "查询元数据的完整血缘关系图")
+//    @Tool(name = "queryFullLineage", description = "查询元数据的完整血缘关系图")
     public String queryFullLineage(@ToolParam(description = "元数据ID") String instId) {
         if (LOCAL_DEBUG_MODE) {
             return getMockFullLineage(instId);
