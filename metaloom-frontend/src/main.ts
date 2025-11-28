@@ -6,6 +6,7 @@ import router from '@/router';
 
 // 全局样式
 import 'element-plus/dist/index.css'
+import '@/styles/global.css'
 
 // 创建Vue应用实例
 const app = createApp(App);

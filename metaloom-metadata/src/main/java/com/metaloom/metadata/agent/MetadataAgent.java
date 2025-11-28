@@ -8,6 +8,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,46 +48,28 @@ public class MetadataAgent {
             """;
 //               若没有完全一致的元数据，则返回所有可能的结果请用户进一步判断。
     /**
-     * 处理元数据查询请求
+     * 处理元数据查询请求（流式输出）
      *
      * @param request 元数据请求
-     * @return 元数据响应
+     * @return 模型输出的流
      */
-    public MetadataResponse processQuery(MetadataRequest request) {
+    public Flux<String> processQuery(MetadataRequest request) {
         ChatClient chatClient = chatClientFactory.getClient("openai", modelName);
-
-        // 提取请求中的关键字
-//        String keyword = extractKeyword(request.getQuery());
-//
-//        if (keyword == null || keyword.isEmpty()) {
-//            return MetadataResponse.builder()
-//                    .success(false)
-//                    .message("未能识别有效的查询关键字，请提供正确的表名、字段名或相关描述")
-//                    .build();
-//        }
 
         // 添加初始用户查询
         String currentUserMessage = request.getQuery();
 
         System.out.println("metadata用户消息: " + currentUserMessage);
 
-        // 使用Spring AI 1.0的正确语法调用模型
-        String response = chatClient.prompt()
+        // 使用Spring AI 1.0的流式API
+        Flux<String> stream = chatClient.prompt()
                 .system(SYSTEM_PROMPT)
                 .user(currentUserMessage)
                 .toolCallbacks(toolCallbackProviderService.getMetadataToolCallbackProvider())
-                .call()
+                .stream()
                 .content();
 
-        System.out.println("metadata模型响应: " + response);
-
-        // 处理并格式化响应
-        return MetadataResponse.builder()
-                .success(true)
-                .message("元数据查询成功")
-                .result(response)
-//                .keyword(keyword)
-                .build();
+        return stream;
     }
 
     /**

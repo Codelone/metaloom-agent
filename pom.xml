@@ -52,6 +52,13 @@
     <easy-rules.version>4.1.0</easy-rules.version>
     <mysql-binlog-connector-java.version>0.13.0</mysql-binlog-connector-java.version>
     <spring-ai.version>1.0.0</spring-ai.version>
+    <!-- Maven Plugin 版本 -->
+    <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+    <maven-surefire-plugin.version>3.0.0-M9</maven-surefire-plugin.version>
+    <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
+    <maven-dependency-plugin.version>3.6.0</maven-dependency-plugin.version>
+    <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
+    <dockerfile-maven-plugin.version>1.4.13</dockerfile-maven-plugin.version>
   </properties>
   <!---->
   <parent>
@@ -60,27 +67,86 @@
     <version>3.4.3</version>
     <relativePath/>
   </parent>
-  <!-- 子服务目录 -->
+  <!-- 子服务目录 - 按依赖关系排序 -->
   <modules>
-    <module>metaloom-prompt</module>
+    <!-- 基础模块先构建 -->
+    <module>metaloom-parent</module>
+    <module>metaloom-common</module>
+    <module>metaloom-common/metaloom-common-jdbc</module>
+    
+    <!-- 工具和组件模块 -->
     <module>metaloom-tools</module>
     <module>metaloom-model</module>
+    <module>metaloom-prompt</module>
     <module>metaloom-rag</module>
+    
+    <!-- 业务模块 -->
     <module>metaloom-lineage</module>
     <module>metaloom-metadata</module>
-    <module>metaloom-common</module>
-    <module>metaloom-parent</module>
-    <module>metaloom-ai</module>
+    
+    <!-- 应用模块最后构建 -->
     <module>metaloom-mcp-server</module>
+    <module>metaloom-ai</module>
     <!--        <module>metaloom-sql-analyze</module>-->
     <!--        <module>metaloom-sql-coding</module>-->
-    <module>metaloom-common/metaloom-common-jdbc</module>
   </modules>
   <!-- 依赖 -->
   <dependencies/>
   <!-- 依赖管理 -->
   <dependencyManagement>
     <dependencies>
+      <!-- 项目内部模块依赖管理 -->
+      <dependency>
+        <groupId>org.metaloom</groupId>
+        <artifactId>metaloom-parent</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.metaloom</groupId>
+        <artifactId>metaloom-common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.metaloom</groupId>
+        <artifactId>metaloom-common-jdbc</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.metaloom</groupId>
+        <artifactId>metaloom-common-utils</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.metaloom</groupId>
+        <artifactId>metaloom-tools</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.metaloom</groupId>
+        <artifactId>metaloom-model</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.metaloom</groupId>
+        <artifactId>metaloom-lineage</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.metaloom</groupId>
+        <artifactId>metaloom-metadata</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.metaloom</groupId>
+        <artifactId>metaloom-mcp-server</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.metaloom</groupId>
+        <artifactId>metaloom-ai</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      
       <!-- Spring Cloud BOM - 必须放在最前面 -->
       <dependency>
         <groupId>org.springframework.cloud</groupId>
@@ -444,17 +510,227 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  <!-- 构建 -->
+  
+  <!-- Maven仓库配置 -->
+  <repositories>
+    <repository>
+      <id>central</id>
+      <name>Central Repository</name>
+      <url>https://repo1.maven.org/maven2</url>
+      <layout>default</layout>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>spring-milestones</id>
+      <name>Spring Milestones</name>
+      <url>https://repo.spring.io/milestone</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>spring-snapshots</id>
+      <name>Spring Snapshots</name>
+      <url>https://repo.spring.io/snapshot</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository>
+  </repositories>
+  
+  <pluginRepositories>
+    <pluginRepository>
+      <id>central</id>
+      <name>Central Repository</name>
+      <url>https://repo1.maven.org/maven2</url>
+      <layout>default</layout>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <releases>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+    </pluginRepository>
+    <pluginRepository>
+      <id>spring-milestones</id>
+      <name>Spring Milestones</name>
+      <url>https://repo.spring.io/milestone</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+  <!-- 多环境配置 -->
+  <profiles>
+    <profile>
+      <id>dev</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <spring.profiles.active>dev</spring.profiles.active>
+      </properties>
+    </profile>
+    <profile>
+      <id>test</id>
+      <properties>
+        <spring.profiles.active>test</spring.profiles.active>
+      </properties>
+    </profile>
+    <profile>
+      <id>prod</id>
+      <properties>
+        <spring.profiles.active>prod</spring.profiles.active>
+      </properties>
+    </profile>
+  </profiles>
+  
+  <!-- 构建配置 -->
   <build>
+    <finalName>${project.artifactId}-${project.version}</finalName>
+    
+    <!-- 插件管理 -->
+    <pluginManagement>
+      <plugins>
+        <!-- Spring Boot Maven Plugin -->
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>${spring-boot.version}</version>
+          <configuration>
+            <layout>ZIP</layout>
+            <includes>
+              <include>
+                <groupId>nothing</groupId>
+                <artifactId>nothing</artifactId>
+              </include>
+            </includes>
+            <excludes>
+              <exclude>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+              </exclude>
+            </excludes>
+          </configuration>
+        </plugin>
+        
+        <!-- Maven Dependency Plugin - 复制依赖到lib目录 -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.6.0</version>
+          <executions>
+            <execution>
+              <id>copy-dependencies</id>
+              <phase>package</phase>
+              <goals>
+                <goal>copy-dependencies</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                <overWriteReleases>false</overWriteReleases>
+                <overWriteSnapshots>false</overWriteSnapshots>
+                <overWriteIfNewer>true</overWriteIfNewer>
+                <includeScope>runtime</includeScope>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        
+        <!-- Maven Jar Plugin - 生成可执行jar -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.3.0</version>
+          <configuration>
+            <archive>
+              <manifest>
+                <addClasspath>true</addClasspath>
+                <classpathPrefix>lib/</classpathPrefix>
+                <useUniqueVersions>false</useUniqueVersions>
+              </manifest>
+            </archive>
+          </configuration>
+        </plugin>
+        
+        <!-- Maven Compiler Plugin -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.11.0</version>
+          <configuration>
+            <source>17</source>
+            <target>17</target>
+            <encoding>UTF-8</encoding>
+          </configuration>
+        </plugin>
+        
+        <!-- Maven Resources Plugin -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.3.0</version>
+          <configuration>
+            <encoding>UTF-8</encoding>
+          </configuration>
+        </plugin>
+        
+        <!-- Dockerfile Maven Plugin -->
+        <plugin>
+          <groupId>com.spotify</groupId>
+          <artifactId>dockerfile-maven-plugin</artifactId>
+          <version>1.4.13</version>
+          <configuration>
+            <repository>${project.artifactId}</repository>
+            <tag>${project.version}</tag>
+            <buildArgs>
+              <JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
+            </buildArgs>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    
+    <!-- 通用插件配置 -->
     <plugins>
       <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
       </plugin>
     </plugins>
+    
+    <!-- 资源配置 -->
     <resources>
       <resource>
         <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*.yml</include>
+          <include>**/*.yaml</include>
+          <include>**/*.properties</include>
+          <include>**/*.xml</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>**/*.yml</exclude>
+          <exclude>**/*.yaml</exclude>
+          <exclude>**/*.properties</exclude>
+        </excludes>
       </resource>
       <resource>
         <directory>src/main/java</directory>

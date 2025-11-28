@@ -18,16 +18,13 @@
     </properties>
 
     <dependencies>
+
         <dependency>
             <groupId>org.metaloom</groupId>
-            <artifactId>metaloom-common</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <artifactId>metaloom-parent</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.metaloom</groupId>-->
-<!--            <artifactId>metaloom-common-jdbc</artifactId>-->
-<!--            <version>1.0-SNAPSHOT</version>-->
-<!--        </dependency>-->
+
+        <!-- Spring AI MCP Client -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-mcp-client</artifactId>

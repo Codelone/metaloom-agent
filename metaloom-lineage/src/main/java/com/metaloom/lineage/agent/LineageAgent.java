@@ -11,6 +11,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -48,12 +49,12 @@ public class LineageAgent {
 //    当你完成了所有必要的工具调用后，请在回答最后加上"[COMPLETE]"标记。
 
     /**
-     * 处理用户血缘查询请求
+     * 处理用户血缘查询请求（流式返回）
      *
      * @param request 血缘查询请求
-     * @return 血缘查询响应
+     * @return 流式文本
      */
-    public LineageResponse processQuery(LineageRequest request) {
+    public Flux<String> processQuery(LineageRequest request) {
         ChatClient chatClient = chatClientFactory.getClient("openai", modelName);
 
 //        // 提取请求中的ID
@@ -71,26 +72,19 @@ public class LineageAgent {
 
         System.out.println("lineage用户消息: " + currentUserMessage);
 
-        // 使用Spring AI 1.0的正确语法调用模型
-        String response = chatClient.prompt()
+        // 使用Spring AI 1.0的正确语法调用模型 - 流式
+        Flux<String> response = chatClient.prompt()
                 .system(SYSTEM_PROMPT)
                 .user(currentUserMessage)
                 .toolCallbacks(toolCallbackProviderService.getLineageToolCallbackProvider())
-                .call()
+//                .call()
+                .stream()
                 .content();
 
-        System.out.println("lineage模型响应: " + response);
+        System.out.println("lineage模型响应Flux创建完成");
 
-        int queryDepth = request.getDepth() > 0 ? request.getDepth() : 1;
-
-        // 处理并格式化响应
-        return LineageResponse.builder()
-                .success(true)
-                .message("血缘查询成功")
-                .result(response)
-//                .instId(instId)
-                .depth(queryDepth)
-                .build();
+        // 直接返回Flux以便上层以SSE等方式输出
+        return response;
     }
 
     /**

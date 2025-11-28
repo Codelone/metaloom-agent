@@ -1,0 +1,106 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: metaloom-ai
+  profiles:
+    active: prod
+    
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://mysql:3306/metaloom?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${SPRING_DATASOURCE_USERNAME:metaloom}
+    password: ${SPRING_DATASOURCE_PASSWORD:metaloom123}
+    
+  # Redis配置
+  redis:
+    host: redis
+    port: 6379
+    password: redis123
+    database: 0
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: 3000ms
+        
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+# MyBatis-Plus配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# Spring AI配置
+spring:
+  ai:
+    openai:
+      # 多个模型实例配置
+      deepseek-v3:
+        api-key: ${DEEPSEEK_API_KEY:sk-xxx}
+        base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+        chat:
+          options:
+            model: deepseek-chat
+            temperature: 0.3
+      qwen3:
+        api-key: ${QWEN_API_KEY:sk-xxx}
+        base-url: ${QWEN_BASE_URL:http://10.244.51.xx:7762/v1}
+        chat:
+          options:
+            model: Qwen2.5-32B-Instruct
+            temperature: 0.3
+
+# MCP配置
+mcp:
+  server:
+    url: http://metaloom-mcp-server:8081
+    
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# 日志配置
+logging:
+  level:
+    com.metaloom: INFO
+    org.springframework.ai: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /app/logs/metaloom-ai.log
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30

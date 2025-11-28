@@ -22,8 +22,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     return {
         // 项目根目录
         root,
-        // 项目部署的基础路径 - 统一前缀配置
-        base: env.VITE_APP_BASE_PATH || '/metaloom/',
+        // 项目部署的基础路径
+        base: env.VITE_APP_BASE_PATH || '/',
         publicDir: fileURLToPath(new URL('./public', import.meta.url)),
         assetsInclude: fileURLToPath(new URL('./src/assets', import.meta.url)),
 
@@ -144,7 +144,16 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         },
 
         // 配置别名
-        resolve: {
+        server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
+      },
+    },
+  },
+  resolve: {
             alias: {
                 '@': fileURLToPath(new URL('./src', import.meta.url)),
                 '#': fileURLToPath(new URL('./src/types', import.meta.url)),

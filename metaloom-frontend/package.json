@@ -1,7 +1,7 @@
 {
-  "name": "NoDeskAI-Agent-Demo",
+  "name": "metaloom-Agent-Demo",
   "version": "1.0.0",
-  "description": "NoDeskAI Agent Demo",
+  "description": "metaloom Agent Demo",
   "main": "index.js",
   "scripts": {
     "dev": "vite --mode development",
@@ -11,7 +11,7 @@
     "prepare": "husky install",
     "lint:lint-staged": "lint-staged"
   },
-  "author": "NoDeskAI",
+  "author": "metaloom",
   "license": "ISC",
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

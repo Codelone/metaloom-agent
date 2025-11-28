@@ -4,7 +4,7 @@
     
     <main class="main-content">
       <div class="hero-section">
-        <h1 class="hero-title">欢迎来到吕相赫的前端世界</h1>
+        <h1 class="hero-title">欢迎来到元织智能体</h1>
         <p class="hero-subtitle">探索技术，创造价值</p>
       </div>
       

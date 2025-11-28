@@ -17,10 +17,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
+        <!-- 内部模块依赖 -->
         <dependency>
             <groupId>org.metaloom</groupId>
             <artifactId>metaloom-parent</artifactId>
-            <version>1.0-SNAPSHOT</version>
         </dependency>
         <!-- 大模型应用开发 相关依赖-->
         <dependency>
@@ -41,7 +41,12 @@
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
         </dependency>
-
+<!--        问题原因：Spring AI 默认使用基于 WebClient 或 RestTemplate 的 HTTP 客户端，以分块编码（chunked） 发送请求体。 vLLM 服务端无法解析分块编码的请求体，导致报错。-->
+<!--        解决办法：完全禁用 Spring WebClient 的分块传输编码（chunked transfer encoding），通过底层 Reactor Netty 客户端进行配置。-->
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty-http</artifactId>
+        </dependency>
     </dependencies>
 
 

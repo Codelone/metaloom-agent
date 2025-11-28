@@ -26,6 +26,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 数据分析智能体协调器
@@ -317,8 +322,10 @@ public class DataAnalysisOrchestrator {
             .depth(2)
             .build();
         
-        LineageResponse response = lineageAgent.processQuery(request);
-        return response.toString();
+        return lineageAgent.processQuery(request)
+            .collect(StringBuilder::new, StringBuilder::append)
+            .map(StringBuilder::toString)
+            .block();
     }
 
     /**
@@ -329,8 +336,10 @@ public class DataAnalysisOrchestrator {
             .query(query)
             .build();
         
-        MetadataResponse response = metadataAgent.processQuery(request);
-        return response.toString();
+        return metadataAgent.processQuery(request)
+            .collect(StringBuilder::new, StringBuilder::append)
+            .map(StringBuilder::toString)
+            .block();
     }
 
     /**
@@ -406,5 +415,132 @@ public class DataAnalysisOrchestrator {
         
         Prompt promptObj = new Prompt(prompt);
         return llm.prompt(promptObj).call().content();
+    }
+
+    public Flux<com.metaloom.ai.orchestrator.model.StepEvent> processAnalysisStream(String userQuery) {
+        return Flux.create(sink -> {
+            log.info("开始处理数据分析(流式): {}", userQuery);
+            final AnalysisResult result = new AnalysisResult();
+            result.setOriginalQuery(userQuery);
+            result.setSteps(new ArrayList<>());
+            final ChatClient llm = chatClientFactory.getClient("openai", modelName);
+            final int maxIterations = 10;
+            final int[] iterationRef = {0};
+            
+            Runnable loop = new Runnable() {
+                @Override
+                public void run() {
+                    String currentQuery = userQuery;
+                    while (iterationRef[0] < maxIterations) {
+                        iterationRef[0]++;
+                        int iteration = iterationRef[0];
+                        String llmResponse = getLLMDecision(llm, buildSystemPrompt(), currentQuery, result);
+                        AgentAction action = parseLLMResponse(llmResponse);
+                        if (action == null) {
+                            sink.next(com.metaloom.ai.orchestrator.model.StepEvent.builder()
+                                .iteration(iteration)
+                                .type("error")
+                                .result("无法解析LLM响应")
+                                .build());
+                            break;
+                        }
+                        // step_start
+                        sink.next(com.metaloom.ai.orchestrator.model.StepEvent.builder()
+                            .iteration(iteration)
+                            .type("step_start")
+                            .agentName(action.getAgentName())
+                            .request(action.getRequestBody())
+                            .build());
+                        
+                        String stepResult;
+                        try {
+                            if (action.getType() == ActionType.FINAL_ANSWER) {
+                                String finalAns = action.getResult();
+                                sink.next(com.metaloom.ai.orchestrator.model.StepEvent.builder()
+                                    .iteration(iteration)
+                                    .type("final_answer")
+                                    .finalAnswer(finalAns)
+                                    .build());
+                                sink.complete();
+                                return;
+                            }
+                            // call agent and aggregate
+                            if ("metadata_agent".equals(action.getAgentName())) {
+                                MetadataRequest req = MetadataRequest.builder().query(action.getRequestBody()).build();
+                                StringBuilder acc = new StringBuilder();
+                                try {
+                                    CountDownLatch latch = new CountDownLatch(1);
+                                    metadataAgent.processQuery(req)
+                                        .doOnNext(chunk -> sink.next(com.metaloom.ai.orchestrator.model.StepEvent.builder()
+                                            .request(action.getRequestBody())
+                                            .iteration(iteration)
+                                            .type("chunk")
+                                            .agentName(action.getAgentName())
+                                            .result(chunk)
+                                            .build()))
+                                        .doOnNext(acc::append)
+                                        .doOnError(err -> latch.countDown())
+                                        .doOnComplete(latch::countDown)
+                                        .subscribe();
+                                    // wait until current agent step completes
+                                    try {
+                                        latch.await(10, TimeUnit.MINUTES);
+                                    } catch (InterruptedException ie) {
+                                        Thread.currentThread().interrupt();
+                                    }
+                                    stepResult = acc.toString();
+                                } catch (Exception e) {
+                                    stepResult = "调用metadata_agent失败: " + e.getMessage();
+                                }
+                            } else if ("lineage_agent".equals(action.getAgentName())) {
+                                LineageRequest req = LineageRequest.builder().query(action.getRequestBody()).depth(2).build();
+                                StringBuilder acc = new StringBuilder();
+                                try {
+                                    CountDownLatch latch = new CountDownLatch(1);
+                                    lineageAgent.processQuery(req)
+                                        .doOnNext(chunk -> sink.next(com.metaloom.ai.orchestrator.model.StepEvent.builder()
+                                            .request(action.getRequestBody())
+                                            .iteration(iteration)
+                                            .type("chunk")
+                                            .agentName(action.getAgentName())
+                                            .result(chunk)
+                                            .build()))
+                                        .doOnNext(acc::append)
+                                        .doOnError(err -> latch.countDown())
+                                        .doOnComplete(latch::countDown)
+                                        .subscribe();
+                                    // wait until current agent step completes
+                                    try {
+                                        latch.await(10, TimeUnit.MINUTES);
+                                    } catch (InterruptedException ie) {
+                                        Thread.currentThread().interrupt();
+                                    }
+                                    stepResult = acc.toString();
+                                } catch (Exception e) {
+                                    stepResult = "调用lineage_agent失败: " + e.getMessage();
+                                }
+                            } else {
+                                stepResult = "未知的智能体: " + action.getAgentName();
+                            }
+                        } catch (Exception ex) {
+                            stepResult = "执行失败: " + ex.getMessage();
+                        }
+                        // emit agent_result
+                        sink.next(com.metaloom.ai.orchestrator.model.StepEvent.builder()
+                            .iteration(iteration)
+                            .type("agent_result")
+                            .agentName(action.getAgentName())
+                            .result(stepResult)
+                            .build());
+                        
+                        // prepare next
+                        currentQuery = buildNextQuery(userQuery, stepResult, iteration);
+                    }
+                    sink.complete();
+                }
+            };
+            // run in boundedElastic to avoid blocking caller thread
+            Schedulers.boundedElastic().schedule(loop);
+        });
     }
 } 

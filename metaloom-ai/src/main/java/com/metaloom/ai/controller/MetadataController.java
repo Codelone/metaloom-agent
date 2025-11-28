@@ -2,9 +2,10 @@ package com.metaloom.ai.controller;
 
 import com.metaloom.metadata.agent.MetadataAgent;
 import com.metaloom.metadata.model.MetadataRequest;
-import com.metaloom.metadata.model.MetadataResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 /**
  * 元数据查询控制器
@@ -17,13 +18,13 @@ public class MetadataController {
     private MetadataAgent metadataAgent;
 
     /**
-     * 处理元数据查询请求
+     * 处理元数据查询请求（SSE流式返回）
      * 
      * @param request 元数据请求
-     * @return 元数据响应
+     * @return 流式文本
      */
-    @PostMapping("/query")
-    public MetadataResponse query(@RequestBody MetadataRequest request) {
+    @PostMapping(value = "/query", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> query(@RequestBody MetadataRequest request) {
         return metadataAgent.processQuery(request);
     }
 } 
