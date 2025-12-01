@@ -60,4 +60,10 @@ public class SessionConfig {
      */
     @Builder.Default
     private Integer contextWindowSize = 10;
+
+    /**
+     * 智能体类型：chatbot(通用聊天)、nl2sql(自然语言转SQL)
+     */
+    @Builder.Default
+    private String agentType = "chatbot";
 }

@@ -5,6 +5,8 @@ import com.metaloom.ai.chatbot.model.ChatMessage;
 import com.metaloom.ai.chatbot.model.ChatSession;
 import com.metaloom.ai.chatbot.model.SessionConfig;
 import com.metaloom.ai.chatbot.memory.ChatMemoryStore;
+import com.metaloom.ai.agent.AgentFactory;
+import com.metaloom.ai.agent.ChatAgent;
 import com.metaloom.ai.chatbot.config.ChatBotConfig;
 import com.metaloom.model.llm.ChatClientFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -28,16 +30,19 @@ public class ChatService {
     private final ChatMemoryStore memoryStore;
     private final ChatClientFactory chatClientFactory;
     private final ChatBotConfig chatBotConfig;
+    private final AgentFactory agentFactory;
 
     @Autowired
     public ChatService(ChatSessionService sessionService,
             ChatMemoryStore memoryStore,
             ChatClientFactory chatClientFactory,
-            ChatBotConfig chatBotConfig) {
+            ChatBotConfig chatBotConfig,
+            AgentFactory agentFactory) {
         this.sessionService = sessionService;
         this.memoryStore = memoryStore;
         this.chatClientFactory = chatClientFactory;
         this.chatBotConfig = chatBotConfig;
+        this.agentFactory = agentFactory;
     }
 
     /**
@@ -82,21 +87,21 @@ public class ChatService {
         // 构建提示词上下文（历史消息）
         String prompt = buildPrompt(session);
 
-        // 调用LLM获取响应
+        // 调用Agent处理消息
         String assistantResponse;
         try {
             SessionConfig config = customConfig != null ? customConfig : session.getConfig();
             ChatClient chatClient = getChatClient(config);
 
-            assistantResponse = chatClient.prompt()
-                    .system(config.getSystemPrompt() != null ? config.getSystemPrompt() : buildSystemPrompt())
-                    .user(prompt)
-                    .call()
-                    .content();
+            // 根据agentType选择对应的Agent
+            ChatAgent agent = agentFactory.getAgent(config.getAgentType());
 
-            log.info("LLM响应成功: sessionId={}, userId={}", session.getSessionId(), userId);
+            assistantResponse = agent.process(session.getSessionId(), prompt, chatClient);
+
+            log.info("Agent响应成功: sessionId={}, userId={}, agentType={}",
+                    session.getSessionId(), userId, config.getAgentType());
         } catch (Exception e) {
-            log.error("LLM调用失败: sessionId={}, userId={}, error={}", session.getSessionId(), userId, e.getMessage());
+            log.error("Agent调用失败: sessionId={}, userId={}, error={}", session.getSessionId(), userId, e.getMessage());
             throw new RuntimeException(ChatBotConstants.ErrorMessages.LLM_ERROR, e);
         }
 
@@ -294,13 +299,12 @@ public class ChatService {
         SessionConfig config = customConfig != null ? customConfig : session.getConfig();
         ChatClient chatClient = getChatClient(config);
 
+        // 根据agentType选择对应的Agent
+        ChatAgent agent = agentFactory.getAgent(config.getAgentType());
+
         StringBuilder contentBuilder = new StringBuilder();
 
-        return chatClient.prompt()
-                .system(config.getSystemPrompt() != null ? config.getSystemPrompt() : buildSystemPrompt())
-                .user(prompt)
-                .stream()
-                .content()
+        return agent.processStream(session.getSessionId(), prompt, chatClient)
                 .doOnNext(contentBuilder::append)
                 .doOnComplete(() -> {
                     String fullContent = contentBuilder.toString();

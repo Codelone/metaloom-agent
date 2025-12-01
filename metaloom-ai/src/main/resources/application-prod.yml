@@ -39,6 +39,23 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+  ai:
+    openai:
+          # 多个模型实例配置
+          deepseek-v3:
+            api-key: ${DEEPSEEK_API_KEY:sk-xxx}
+            base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+            chat:
+              options:
+                model: deepseek-chat
+                temperature: 0.3
+          qwen3:
+            api-key: ${QWEN_API_KEY:sk-xxx}
+            base-url: ${QWEN_BASE_URL:http://10.244.51.xx:7762/v1}
+            chat:
+              options:
+                model: Qwen2.5-32B-Instruct
+                temperature: 0.3
 
 # MyBatis-Plus配置
 mybatis-plus:
@@ -52,24 +69,6 @@ mybatis-plus:
       logic-not-delete-value: 0
 
 # Spring AI配置
-spring:
-  ai:
-    openai:
-      # 多个模型实例配置
-      deepseek-v3:
-        api-key: ${DEEPSEEK_API_KEY:sk-xxx}
-        base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
-        chat:
-          options:
-            model: deepseek-chat
-            temperature: 0.3
-      qwen3:
-        api-key: ${QWEN_API_KEY:sk-xxx}
-        base-url: ${QWEN_BASE_URL:http://10.244.51.xx:7762/v1}
-        chat:
-          options:
-            model: Qwen2.5-32B-Instruct
-            temperature: 0.3
 
 # MCP配置
 mcp:
@@ -85,9 +84,9 @@ management:
   endpoint:
     health:
       show-details: when_authorized
-  metrics:
-    export:
-      prometheus:
+  prometheus:
+    metrics:
+      export:
         enabled: true
 
 # 日志配置

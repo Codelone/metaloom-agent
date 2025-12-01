@@ -34,6 +34,11 @@ export async function updateSessionTitle(sessionId: string, title: string) {
     console.log('Update session title:', sessionId, title);
 }
 
+export async function getAgents() {
+    const response = await api.get('/chat/agents');
+    return response.data;
+}
+
 // SSE Helper
 export async function fetchStream(
     url: string,

@@ -120,29 +120,20 @@ spring:
 #  mapper-locations: classpath*:mapper/**/*.xml
 #  type-aliases-package: com.metaloom.common.jdbc
 
-# A2A智能体配置  暂未使用
+# ChatBot配置
 metaloom:
-  a2a:
+  chatbot:
     enabled: true
-    max-iterations: 5
-    timeout: 30000
-    available-agents:
-      - lineage_agent
-      - metadata_agent
-    agents:
-      lineage_agent:
-        name: "血缘分析智能体"
-        description: "用于查询数据血缘关系、数据流向、依赖关系等"
-        enabled: true
-        timeout: 10000
-      metadata_agent:
-        name: "元数据查询智能体"
-        description: "用于查询表结构、字段信息、数据字典等元数据信息"
-        enabled: true
-        timeout: 10000
-    llm:
-      provider: "openai"
-      model: "deepseek-v3"
-      temperature: 0.7
-      max-tokens: 2000
-      system-prompt: |
+    session-timeout: 3600  # 会话超时时间（秒）
+    max-sessions-per-user: 50  # 单个用户最多允许的会话数
+    default-provider: "openai"
+    default-model: "deepseek-v3"
+    default-temperature: 0.7
+    default-max-tokens: 2000
+    default-context-window-size: 10  # 保留最近10条消息作为上下文
+    default-memory-mode: "short_term"  # 记忆模式: none, short_term, long_term
+    enable-streaming: true  # 是否启用流式响应
+    enable-memory: true  # 是否启用记忆功能
+    enable-persistence: true  # 是否启用对话历史持久化
+    persistence-type: "memory"  # 持久化类型: memory(内存), database(数据库)
+    system-prompt: "你是一个有帮助的AI助手。请根据用户的问题提供准确、清晰和有用的回答。"

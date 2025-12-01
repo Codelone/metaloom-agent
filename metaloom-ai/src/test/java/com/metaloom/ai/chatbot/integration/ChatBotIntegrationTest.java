@@ -1,5 +1,6 @@
 package com.metaloom.ai.chatbot.integration;
 
+import com.metaloom.ai.agent.AgentFactory;
 import com.metaloom.ai.chatbot.config.ChatBotConfig;
 import com.metaloom.ai.chatbot.constant.ChatBotConstants;
 import com.metaloom.ai.chatbot.memory.ChatMemoryStore;
@@ -40,6 +41,9 @@ class ChatBotIntegrationTest {
     @Mock
     private ChatClient chatClient;
 
+    @Mock
+    private AgentFactory agentFactory;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -47,7 +51,7 @@ class ChatBotIntegrationTest {
         ChatBotConfig chatBotConfig = new ChatBotConfig();
         sessionService = new ChatSessionService(chatBotConfig);
         memoryStore = new InMemoryChatMemoryStore();
-        chatService = new ChatService(sessionService, memoryStore, chatClientFactory, chatBotConfig);
+        chatService = new ChatService(sessionService, memoryStore, chatClientFactory, chatBotConfig, agentFactory);
 
         // Mock ChatClient行为
         when(chatClientFactory.getClient(anyString(), anyString())).thenReturn(chatClient);

@@ -26,13 +26,16 @@ public class ChatController {
     private final ChatService chatService;
     private final ChatSessionService sessionService;
     private final ObjectMapper objectMapper;
+    private final com.metaloom.ai.agent.AgentFactory agentFactory;
     private static final String DEFAULT_USER_ID = "demo-user";
 
     @Autowired
-    public ChatController(ChatService chatService, ChatSessionService sessionService, ObjectMapper objectMapper) {
+    public ChatController(ChatService chatService, ChatSessionService sessionService, ObjectMapper objectMapper,
+            com.metaloom.ai.agent.AgentFactory agentFactory) {
         this.chatService = chatService;
         this.sessionService = sessionService;
         this.objectMapper = objectMapper;
+        this.agentFactory = agentFactory;
     }
 
     @PostMapping("/chat/send")
@@ -40,12 +43,24 @@ public class ChatController {
         String conversationId = (String) request.get("conversationId");
         String message = (String) request.get("message");
 
+        // 支持从options中获取agentType
+        Map<String, Object> options = (Map<String, Object>) request.get("options");
+        String agentType = options != null ? (String) options.get("agentType") : null;
+
         try {
+            // 构建SessionConfig（如果指定了agentType）
+            com.metaloom.ai.chatbot.model.SessionConfig customConfig = null;
+            if (agentType != null) {
+                customConfig = com.metaloom.ai.chatbot.model.SessionConfig.builder()
+                        .agentType(agentType)
+                        .build();
+            }
+
             ChatMessage responseMessage = chatService.sendMessage(
                     conversationId,
                     DEFAULT_USER_ID,
                     message,
-                    null);
+                    customConfig);
 
             return ResponseEntity.ok(formatResponse(responseMessage));
 
@@ -56,17 +71,30 @@ public class ChatController {
     }
 
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> streamMessage(@RequestBody Map<String, String> request) {
-        String conversationId = request.get("conversationId");
-        String message = request.get("message");
+    public Flux<String> streamMessage(@RequestBody Map<String, Object> request) {
+        String conversationId = (String) request.get("conversationId");
+        String message = (String) request.get("message");
+
+        // 支持从options中获取agentType
+        Map<String, Object> options = (Map<String, Object>) request.get("options");
+        String agentType = options != null ? (String) options.get("agentType") : null;
 
         log.info("=== Stream request START ===");
         log.info("conversationId: {}", conversationId);
         log.info("message: {}", message);
         log.info("userId: {}", DEFAULT_USER_ID);
+        log.info("agentType: {}", agentType);
 
         try {
-            return chatService.streamMessage(conversationId, DEFAULT_USER_ID, message, null)
+            // 构建SessionConfig（如果指定了agentType）
+            com.metaloom.ai.chatbot.model.SessionConfig customConfig = null;
+            if (agentType != null) {
+                customConfig = com.metaloom.ai.chatbot.model.SessionConfig.builder()
+                        .agentType(agentType)
+                        .build();
+            }
+
+            return chatService.streamMessage(conversationId, DEFAULT_USER_ID, message, customConfig)
                     .doOnSubscribe(subscription -> log.info("Stream subscribed"))
                     .map(content -> {
                         try {
@@ -100,6 +128,11 @@ public class ChatController {
     public ResponseEntity<String> testEndpoint() {
         log.info("Test endpoint called");
         return ResponseEntity.ok("Backend is working!");
+    }
+
+    @GetMapping("/chat/agents")
+    public ResponseEntity<List<Map<String, String>>> getAgents() {
+        return ResponseEntity.ok(agentFactory.getAvailableAgentTypes());
     }
 
     @GetMapping("/conversations")

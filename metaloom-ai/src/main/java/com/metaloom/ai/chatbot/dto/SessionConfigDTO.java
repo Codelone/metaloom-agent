@@ -52,4 +52,9 @@ public class SessionConfigDTO {
      * 上下文窗口大小
      */
     private Integer contextWindowSize;
+
+    /**
+     * 智能体类型：chatbot、nl2sql等
+     */
+    private String agentType;
 }

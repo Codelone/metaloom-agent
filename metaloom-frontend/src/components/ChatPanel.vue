@@ -50,6 +50,16 @@
       </div>
 
       <div class="composer-area">
+        <div class="agent-selector-wrapper">
+            <el-select v-model="selectedAgent" placeholder="Select Agent" size="small" style="width: 150px">
+                <el-option
+                    v-for="agent in agentTypes"
+                    :key="agent.code"
+                    :label="agent.description"
+                    :value="agent.code"
+                />
+            </el-select>
+        </div>
         <div class="composer-wrapper">
           <el-input
             v-model="inputMessage"
@@ -88,6 +98,24 @@ const messagesContainer = ref<HTMLElement | null>(null);
 const inputMessage = ref('');
 const isTyping = ref(false);
 
+const agentTypes = ref<Array<{code: string, description: string}>>([]);
+const selectedAgent = ref('chatbot');
+
+import { onMounted } from 'vue';
+import { getAgents } from '@/services/api';
+
+onMounted(async () => {
+    try {
+        const agents = await getAgents();
+        agentTypes.value = agents;
+        if (agents.length > 0) {
+            selectedAgent.value = agents[0].code;
+        }
+    } catch (e) {
+        console.error('Failed to fetch agents', e);
+    }
+});
+
 const scrollToBottom = async () => {
   await nextTick();
   if (messagesContainer.value) {
@@ -114,7 +142,7 @@ const renderContent = (content: string) => {
   return renderMarkdown(content);
 };
 
-const sendMessage = async () => {
+    const sendMessage = async () => {
   if (!inputMessage.value.trim() || isTyping.value) return;
 
   const content = inputMessage.value.trim();
@@ -155,7 +183,11 @@ const sendMessage = async () => {
     try {
       await fetchStream(
         '/api/chat/stream',
-        { conversationId: sessionId, message: content },
+        { 
+            conversationId: sessionId, 
+            message: content,
+            options: { agentType: selectedAgent.value }
+        },
         (chunk) => {
           console.log('📦 [ChatPanel] Received chunk:', chunk);
           
@@ -372,11 +404,23 @@ const exportChat = () => {
   padding: var(--spacing-xl);
   background-color: var(--color-bg-page);
   border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.agent-selector-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
 }
 
 .composer-wrapper {
   max-width: 800px;
   margin: 0 auto;
+  width: 100%;
   display: flex;
   gap: var(--spacing-md);
   background-color: var(--color-bg-card);
