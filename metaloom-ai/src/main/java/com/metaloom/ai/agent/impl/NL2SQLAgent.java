@@ -110,6 +110,9 @@ public class NL2SQLAgent implements ChatAgent {
                    - 字段名必须来自getTableSchema的结果
                    - JOIN条件必须基于getJoinRelations的结果
                    - SQL语句符合ODPS语法规范
+                   - 表名dd结尾为分区表，分区为全量数据，必须添加时间分区字段限制，格式：yyyyMMdd
+                   - 表名di结尾为增量表，分区为每日增量数据。
+                   - 分区字段一般默认为dt，可根据字段信息判断。
 
                 6. **返回结果**: 以Markdown格式返回，包含：
                    1.完整的SQL语句，以代码块展示
@@ -129,7 +132,8 @@ public class NL2SQLAgent implements ChatAgent {
                 - 禁止生成任何修改数据的SQL（INSERT/UPDATE/DELETE）
                 - 禁止生成任何DDL语句（CREATE/DROP/ALTER）
                 - 禁止使用存储过程或系统函数
-
+                
+                ## 表信息
                 %s
 
                 请根据用户的查询，按照上述流程生成准确的SQL语句。

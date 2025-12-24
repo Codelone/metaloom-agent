@@ -1,0 +1,37 @@
+[
+  {
+    "父表": "ADM_PBLC_BSN_CR_CRD_CRD_INF_DD",
+    "父表字段": "CR_CRD_CRD_NO",
+    "子表": "ADM_PBLC_BSN_CR_CRD_ACT_INF_DD",
+    "子表字段": "CR_CRD_LTST_HST_CRD_CRD_NO",
+    "关系基数": "一对多"
+  },
+  {
+    "父表": "ADM_PBLC_BSN_CR_CRD_CRD_INF_DD",
+    "父表字段": "CR_CRD_CRD_NO",
+    "子表": "ADM_PBLC_BSN_CR_CRD_CR_CRD_APLY_INF_DD",
+    "子表字段": "CR_CRD_CRD_NO",
+    "关系基数": "一对多"
+  },
+  {
+    "父表": "ADM_PBLC_BSN_CR_CRD_ACT_INF_DD",
+    "父表字段": "CR_CRD_ACT_ID",
+    "子表": "ADM_PBLC_BSN_CR_CRD_ACT_ACMUN_INF_DD",
+    "子表字段": "CR_CRD_ACT_ID",
+    "关系基数": "一对多"
+  },
+  {
+    "父表": "ADM_PBLC_BSN_CR_CRD_ACT_INF_DD",
+    "父表字段": "CR_CRD_ACT_ID",
+    "子表": "ADM_PBLC_BSN_CR_CRD_ACT_INC_XPS_INF_DD",
+    "子表字段": "CR_CRD_ACT_ID",
+    "关系基数": "一对多"
+  },
+  {
+    "父表": "ADM_PBLC_BSN_CR_CRD_ACT_INF_DD",
+    "父表字段": "CR_CRD_ACT_ID",
+    "子表": "ADM_PBLC_BSN_CR_CRD_TRX_DTL_DI",
+    "子表字段": "CR_CRD_ACT_ID",
+    "关系基数": "一对多"
+  }
+]
